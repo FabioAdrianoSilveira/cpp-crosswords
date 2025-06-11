@@ -1,70 +1,81 @@
-#include "imgui.h"
-#include "imgui_impl_sdl3.h"
-#include "imgui_impl_sdlrenderer3.h"
+/* debug-text.c ... */
+
+/*
+ * This example creates an SDL window and renderer, and then draws some text
+ * using SDL_RenderDebugText() every frame.
+ *
+ * This code is public domain. Feel free to use it for any purpose!
+ */
+
+#define SDL_MAIN_USE_CALLBACKS 1  /* use the callbacks instead of main() */
 #include <SDL3/SDL.h>
-#include <stdio.h>
+#include <SDL3/SDL_main.h>
 
-int main(int, char**) {
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) {
-        printf("Error: SDL_Init(): %s\n", SDL_GetError());
-        return -1;
+/* We will use this renderer to draw into this window every frame. */
+static SDL_Window *window = NULL;
+static SDL_Renderer *renderer = NULL;
+
+#define WINDOW_WIDTH 640
+#define WINDOW_HEIGHT 480
+
+/* This function runs once at startup. */
+SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
+{
+    SDL_SetAppMetadata("Example Renderer Debug Texture", "1.0", "com.example.renderer-debug-text");
+
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
+        SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
     }
 
-    SDL_Window* window = SDL_CreateWindow("Dear ImGui + SDL3 Example", 1280, 720, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-    if (!window) {
-        printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
-        return -1;
+    if (!SDL_CreateWindowAndRenderer("examples/renderer/debug-text", WINDOW_WIDTH, WINDOW_HEIGHT, 0, &window, &renderer)) {
+        SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
     }
 
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, nullptr);
-    SDL_SetRenderVSync(renderer, 1);
+    return SDL_APP_CONTINUE;  /* carry on with the program! */
+}
 
-    if (!renderer) {
-        SDL_Log("Error: SDL_CreateRenderer(): %s\n", SDL_GetError());
-        return -1;
+/* This function runs when a new event (mouse input, keypresses, etc) occurs. */
+SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
+{
+    if (event->type == SDL_EVENT_QUIT) {
+        return SDL_APP_SUCCESS;  /* end the program, reporting success to the OS. */
     }
+    return SDL_APP_CONTINUE;  /* carry on with the program! */
+}
 
-    SDL_ShowWindow(window);
+/* This function runs once per frame, and is the heart of the program. */
+SDL_AppResult SDL_AppIterate(void *appstate)
+{
+    const int charsize = SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE;
 
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+    /* as you can see from this, rendering draws over whatever was drawn before it. */
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);  /* black, full alpha */
+    SDL_RenderClear(renderer);  /* start with a blank canvas. */
 
-    ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
-    ImGui_ImplSDLRenderer3_Init(renderer);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);  /* white, full alpha */
+    SDL_RenderDebugText(renderer, 272, 100, "Hello world!");
+    SDL_RenderDebugText(renderer, 224, 150, "This is some debug text.");
 
-    bool done = false;
-    while (!done) {
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            ImGui_ImplSDL3_ProcessEvent(&event);
-            if (event.type == SDL_EVENT_QUIT)
-                done = true;
-        }
+    SDL_SetRenderDrawColor(renderer, 51, 102, 255, SDL_ALPHA_OPAQUE);  /* light blue, full alpha */
+    SDL_RenderDebugText(renderer, 184, 200, "You can do it in different colors.");
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);  /* white, full alpha */
 
-        ImGui_ImplSDLRenderer3_NewFrame();
-        ImGui_ImplSDL3_NewFrame();
-        ImGui::NewFrame();
+    SDL_SetRenderScale(renderer, 4.0f, 4.0f);
+    SDL_RenderDebugText(renderer, 14, 65, "It can be scaled.");
+    SDL_SetRenderScale(renderer, 1.0f, 1.0f);
+    SDL_RenderDebugText(renderer, 64, 350, "This only does ASCII chars. So this laughing emoji won't draw: 🤣");
 
-        ImGui::Begin("Hello, world!");
-        ImGui::Text("Welcome to Dear ImGui with SDL3!");
-        ImGui::End();
+    SDL_RenderDebugTextFormat(renderer, (float) ((WINDOW_WIDTH - (charsize * 46)) / 2), 400, "(This program has been running for %" SDL_PRIu64 " seconds.)", SDL_GetTicks() / 1000);
 
-        ImGui::Render();
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-        SDL_RenderClear(renderer);
-        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
-        SDL_RenderPresent(renderer);
-    }
+    SDL_RenderPresent(renderer);  /* put it all on the screen! */
 
-    ImGui_ImplSDLRenderer3_Shutdown();
-    ImGui_ImplSDL3_Shutdown();
-    ImGui::DestroyContext();
+    return SDL_APP_CONTINUE;  /* carry on with the program! */
+}
 
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
-
-    return 0;
+/* This function runs once at shutdown. */
+void SDL_AppQuit(void *appstate, SDL_AppResult result)
+{
+    /* SDL will clean up the window/renderer for us. */
 }
