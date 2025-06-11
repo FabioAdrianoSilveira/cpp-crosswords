@@ -1,81 +1,94 @@
-/* debug-text.c ... */
-
-/*
- * This example creates an SDL window and renderer, and then draws some text
- * using SDL_RenderDebugText() every frame.
- *
- * This code is public domain. Feel free to use it for any purpose!
- */
-
-#define SDL_MAIN_USE_CALLBACKS 1  /* use the callbacks instead of main() */
+// Adicionar headers
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <iostream>
 
-/* We will use this renderer to draw into this window every frame. */
-static SDL_Window *window = NULL;
-static SDL_Renderer *renderer = NULL;
+// Adicionar arquivos de struct
+#include "Game.cpp"
 
-#define WINDOW_WIDTH 640
-#define WINDOW_HEIGHT 480
+// definir parametros de inicializacao
+#define SDL_FLAGS SDL_INIT_VIDEO
 
-/* This function runs once at startup. */
-SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
+// definir parametros da janela
+#define WINDOW_TITLE "Cruzadinhas++"
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 600
+
+
+// Declarar funcoes
+bool game_init_sdl(Game *g);
+void game_free(Game *g);
+void game_run(Game *g);
+
+// inicializar o jogo com verificações
+bool game_init_sdl(Game *g)
 {
-    SDL_SetAppMetadata("Example Renderer Debug Texture", "1.0", "com.example.renderer-debug-text");
+	if (!SDL_Init(SDL_FLAGS))
+	{
+		std::cout << "Error initializing SDL3: " << SDL_GetError() << std::endl;
+		return false;
+	}
 
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
-        SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
-        return SDL_APP_FAILURE;
-    }
+	// Inicializar janela
+	g->window = SDL_CreateWindow(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
+	if (g->window == NULL)
+	{
+		std::cout << "Error creating window: " << SDL_GetError() << std::endl;
+		return false;
+	}
 
-    if (!SDL_CreateWindowAndRenderer("examples/renderer/debug-text", WINDOW_WIDTH, WINDOW_HEIGHT, 0, &window, &renderer)) {
-        SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
-        return SDL_APP_FAILURE;
-    }
+	// Criar renderer
+        g->renderer = SDL_CreateRenderer(g->window, NULL);
+        if (g->renderer == NULL)
+        {
+                std::cout << "Error creating renderer: " << SDL_GetError() << std::endl;
+        }
 
-    return SDL_APP_CONTINUE;  /* carry on with the program! */
+	return true;
 }
 
-/* This function runs when a new event (mouse input, keypresses, etc) occurs. */
-SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
+// Fechar o jogo e destruir componentes
+void game_free(Game *g)
 {
-    if (event->type == SDL_EVENT_QUIT) {
-        return SDL_APP_SUCCESS;  /* end the program, reporting success to the OS. */
-    }
-    return SDL_APP_CONTINUE;  /* carry on with the program! */
+	if (g->renderer)
+        {
+                SDL_DestroyRenderer(g->renderer);
+                g->renderer = NULL;
+        }
+
+	if(g->window)
+	{
+		SDL_DestroyWindow(g->window);
+		g->window = NULL;
+	}
+
+	SDL_Quit();
 }
 
-/* This function runs once per frame, and is the heart of the program. */
-SDL_AppResult SDL_AppIterate(void *appstate)
+void game_run(Game *g)
 {
-    const int charsize = SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE;
+	SDL_SetRenderDrawColor(g->renderer, 128, 0, 128, 255);
 
-    /* as you can see from this, rendering draws over whatever was drawn before it. */
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);  /* black, full alpha */
-    SDL_RenderClear(renderer);  /* start with a blank canvas. */
+	SDL_RenderClear(g->renderer);
+	SDL_RenderPresent(g->renderer);
 
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);  /* white, full alpha */
-    SDL_RenderDebugText(renderer, 272, 100, "Hello world!");
-    SDL_RenderDebugText(renderer, 224, 150, "This is some debug text.");
-
-    SDL_SetRenderDrawColor(renderer, 51, 102, 255, SDL_ALPHA_OPAQUE);  /* light blue, full alpha */
-    SDL_RenderDebugText(renderer, 184, 200, "You can do it in different colors.");
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);  /* white, full alpha */
-
-    SDL_SetRenderScale(renderer, 4.0f, 4.0f);
-    SDL_RenderDebugText(renderer, 14, 65, "It can be scaled.");
-    SDL_SetRenderScale(renderer, 1.0f, 1.0f);
-    SDL_RenderDebugText(renderer, 64, 350, "This only does ASCII chars. So this laughing emoji won't draw: 🤣");
-
-    SDL_RenderDebugTextFormat(renderer, (float) ((WINDOW_WIDTH - (charsize * 46)) / 2), 400, "(This program has been running for %" SDL_PRIu64 " seconds.)", SDL_GetTicks() / 1000);
-
-    SDL_RenderPresent(renderer);  /* put it all on the screen! */
-
-    return SDL_APP_CONTINUE;  /* carry on with the program! */
+	SDL_Delay(5000);
 }
 
-/* This function runs once at shutdown. */
-void SDL_AppQuit(void *appstate, SDL_AppResult result)
+int main(void)
 {
-    /* SDL will clean up the window/renderer for us. */
+	bool exit_status = EXIT_FAILURE;
+
+	Game game = {0};
+
+	if (game_init_sdl(&game))
+	{
+		game_run(&game);
+
+		exit_status = EXIT_SUCCESS;
+	}
+
+	game_free(&game);
+
+	return exit_status;
 }
