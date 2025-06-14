@@ -1,3 +1,3 @@
 # CrossWords++
 
-A crosswords apps written in C++ using SDL2.
+A crosswords apps written in C++ and SDL3.
