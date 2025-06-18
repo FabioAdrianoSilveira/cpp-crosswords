@@ -232,7 +232,7 @@ int main() {
 				}
 			}
 
-			std::cout << "TECLA PRESSIONADA: " << cells[selected_cell.i][selected_cell.j] << std::endl;
+			//std::cout << "TECLA PRESSIONADA: " << cells[selected_cell.i][selected_cell.j] << std::endl;
 
         }
         SDL_RenderClear(game.renderer);
@@ -365,8 +365,9 @@ void render_number(struct Game *game, SDL_Rect *rect, char c, int i, int j)
 	trect.h = TEXT_SIZE + 10;
 	trect.w = TEXT_SIZE + 10;
 	const SDL_Rect crect = trect;
+	std::string cs(1, c);
 
-	SDL_Surface*surface = TTF_RenderUTF8_Blended(game->text_font, &c, game->text_color);
+	SDL_Surface*surface = TTF_RenderText_Solid(game->text_font, std::data(cs), game->text_color);
 	if (!surface)
 	{
 		std::cout << "Error creating Surface: " << SDL_GetError() << std::endl;
