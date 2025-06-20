@@ -1,3 +1,7 @@
+CREATE DATABASE palavras_cruzadas;
+
+USE palavras_cruzadas;
+
 CREATE TABLE palavras_cruzadas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     palavra VARCHAR(7) NOT NULL,
@@ -8,7 +12,7 @@ INSERT INTO palavras_cruzadas (palavra, dica) VALUES
 ('Formiga', 'Inseto que vive em colônia'),
 ('Ensinar', 'Ato de transmitir conhecimento'),
 ('Cinismo', 'Falsa inocência ou descaramento'),
-('Maconha', 'Droga feita da planta cannabis'),
+('Maconha', 'Substância feita de plantas'),
 ('Carinho', 'Afeto demonstrado com gestos'),
 ('Soberba', 'Orgulho excessivo, arrogância'),
 ('Coragem', 'Enfrentar o medo com bravura'),
@@ -39,7 +43,7 @@ INSERT INTO palavras_cruzadas (palavra, dica) VALUES
 ('Sincero', 'Que fala com honestidade'),
 ('Censura', 'Reprovação ou veto'),
 ('Sentido', 'Percepção ou significado'),
-('Tinhoso', 'Teimoso ou demoníaco (folclore)'),
+('Tinhoso', 'Nome alternativo para o diabo'),
 ('Apogeu', 'Ponto mais alto de algo'),
 ('Alheio', 'Que pertence a outro'),
 ('Abelha', 'Inseto que produz mel'),
