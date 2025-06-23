@@ -8,6 +8,7 @@
 #include <random>
 #include <chrono>
 #include <mysql/mysql.h>
+#include <fstream>
 
 using namespace std;
 
@@ -360,6 +361,50 @@ bool compareSlots(const CrosswordSlot &a, const CrosswordSlot &b)
     return a.slotDirection < b.slotDirection; // Slots horizontais têm prioridade (determinado de acordo com a tabela ASCII)
 }
 
+void exportBoardToFile(const Board &board, const string &filename)
+{
+    ofstream file(filename);
+    if (!file)
+    {
+        cout << "Erro ao abrir o arquivo para escrita: " << filename << endl;
+        return;
+    }
+
+    for (int i = 0; i < board.lines; ++i)
+    {
+        for (int j = 0; j < board.columns; ++j)
+        {
+            if (board.grid[i][j].blocked)
+                file << "#";
+            else if (board.grid[i][j].filled)
+                file << board.grid[i][j].letter;
+            else
+                file << "_";
+        }
+        file << endl;
+    }
+
+    file.close();
+}
+
+void exportTipsToFile(const map<pair<int, char>, Word> &placedWords, const string &filename)
+{
+    ofstream file(filename);
+    if (!file)
+    {
+        cout << "Erro ao abrir o arquivo para escrita: " << filename << endl;
+        return;
+    }
+
+    for (const auto &entry : placedWords)
+    {
+        const Word &word = entry.second;
+        file << word.tip << endl;
+    }
+
+    file.close();
+}
+
 int main()
 {
     /*
@@ -381,9 +426,9 @@ int main()
     MYSQL_ROW row;
 
     ConnectionVariables mysqlDatabase;
-    mysqlDatabase.SERVER = ""; // Para rodar localmente, o valor de SERVER deve ser "localhost" | Para rodar em nuvem, o valor de SERVER deve ser "switchyard.proxy.rlwy.net"
-    mysqlDatabase.USER = ""; // Para rodar localmente, o valor de USER deve ser "root" (ou seu usuário de preferência) | Para rodar em nuvem, o valor de USER deve ser "root"
-    mysqlDatabase.PASSWORD = ""; // Para rodar localmente, o valor de PASSWORD deve ser {sua_senha} | Para rodar em nuvem, o valor de PASSWORD deve ser "XnvkSWZdYVocercOkmtfeAeXcPXtzdGV"
+    mysqlDatabase.SERVER = "";           // Para rodar localmente, o valor de SERVER deve ser "localhost" | Para rodar em nuvem, o valor de SERVER deve ser "switchyard.proxy.rlwy.net"
+    mysqlDatabase.USER = "";                  // Para rodar localmente, o valor de USER deve ser "root" (ou seu usuário de preferência) | Para rodar em nuvem, o valor de USER deve ser "root"
+    mysqlDatabase.PASSWORD = "";  // Para rodar localmente, o valor de PASSWORD deve ser {sua_senha} | Para rodar em nuvem, o valor de PASSWORD deve ser "XnvkSWZdYVocercOkmtfeAeXcPXtzdGV"
     mysqlDatabase.DATABASE = ""; // Para rodar localmente, o valor de DATABASE deve ser "palavras_cruzadas" | Para rodar em nuvem, o valor de DATABASE deve ser "railway"
 
     connect = ConnectionSetup(mysqlDatabase);
@@ -522,6 +567,9 @@ int main()
     cout << "\nTabuleiro Preenchido:\n";
     gameBoard.Print();
 
+    string filename = "./files/board.txt";
+    exportBoardToFile(gameBoard, filename);
+    
     // Exibição das palavras usadas e dicas associadas a essas palavras
     cout << "\n--- Palavras e Dicas ---" << endl;
     for (const auto &slot : boardSlots)
@@ -535,13 +583,14 @@ int main()
         if (it != placedWords.end())
         {
             /*
-                No contexto de objetos do tipo map, trabalhamos com "->" ao invés de "." pr estarmos acessando o ponteiro de um objeto
+                No contexto de objetos do tipo map, trabalhamos com "->" ao invés de "." por estarmos acessando o ponteiro de um objeto
                 No contexto de objetos do tipo map, variable->first te da acesso ao id do elemento, já variable->second te da acesso ao elemento mapeado
             */
             const Word &word = it->second;
             cout << word.tip << " (" << word.text << ")" << endl;
         }
     }
-
+    filename = "./files/tips.txt";
+    exportTipsToFile(placedWords, filename);
     return 0;
 }
