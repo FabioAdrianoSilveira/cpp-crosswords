@@ -14,6 +14,9 @@
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 
+// INCLUIR ARQUIVOS PRODUZIDOS PELO SERVIDOR
+#include "jogo.h"
+
 // definir parametros da janela e fonte
 #define WINDOW_TITLE "Cruzadinhas++"
 #define SCREEN_WIDTH 800
@@ -46,6 +49,7 @@ bool sdl_initialize(struct Game *game);
 bool render_text(struct Game *game, std::string text);
 bool render_number(struct Game *game, SDL_Rect *rect, char c, int i, int j);
 bool draw_canvas(struct Game *game, int canvas[8][8], struct SelectedCell *selected_cell, char cells[8][8]);
+bool isWin(char cells[8][8]);
 
 int main() {
 
@@ -64,6 +68,8 @@ int main() {
 
 	// declarar o texto de início
 	SelectedCell selected_cell = {
+		.i = 0,
+		.j = 0,
 		.hint = "Boas vindas às Cruzadinhas++!\nClique em uma célula, leia a dica e digite a palavra em seu teclado!"
 	};
 	// declarar o formato e células do tabuleiro
@@ -88,6 +94,9 @@ int main() {
 	// declarar contador do texto, importante para fazer o texto aparecer aos poucos
 	int text_counter = 1;
 
+	// declarar variável de vitória
+	bool win = false;
+
 	// definir struct do jogo
     struct Game game = {
         .window = NULL,
@@ -109,6 +118,8 @@ int main() {
 
 	// GAME LOOP
     while (true) {
+		// estado de vitoria ou nao
+		bool hasWin = false;
 
 		// CONTROLE DE INPUTS DO JOGADOR
         SDL_Event event;
@@ -123,34 +134,52 @@ int main() {
             case SDL_MOUSEBUTTONDOWN:
 				drawing_text = true;
 				
-				SDL_GetMouseState( &mousepos_x, &mousepos_y);
-
-				if (mousepos_x >= 100)
+				if(isWin(cells))
 				{
-					while( mousepos_x >= 10 )
+					SDL_GetMouseState( &mousepos_x, &mousepos_y);
+
+					if (mousepos_x >= 100)
 					{
-						mousepos_x = mousepos_x / 10;
+						while( mousepos_x >= 10 )
+						{
+							mousepos_x = mousepos_x / 10;
+						}
+					}
+					else
+					{
+						mousepos_x = 0;
+					}
+					if (mousepos_y >= 100)
+					{
+						while( mousepos_y >= 10 )
+						{
+							mousepos_y = mousepos_y / 10;
+						}
+					}
+					else
+					{
+						mousepos_y = 0;
+					}
+					selected_cell.i = mousepos_x;
+					selected_cell.j = mousepos_y;
+
+					if (ANSWER_SHEET.hint[selected_cell.j][selected_cell.i] != "0" && win == false)
+					{
+						selected_cell.hint = ANSWER_SHEET.hint[selected_cell.j][selected_cell.i];
+						text_counter = 1;
 					}
 				}
 				else
 				{
-					mousepos_x = 0;
-				}
-				if (mousepos_y >= 100)
-				{
-					while( mousepos_y >= 10 )
+					selected_cell.i = 0;
+					selected_cell.j = 0;
+					selected_cell.hint = "Parabéns!\nVocê venceu!";
+					if (!hasWin)
 					{
-						mousepos_y = mousepos_y / 10;
+						text_counter = 1;
 					}
+					hasWin = true;
 				}
-				else
-				{
-					mousepos_y = 0;
-				}
-				selected_cell.i = mousepos_x;
-				selected_cell.j = mousepos_y;
-
-				// selected_cell.hint = cells[selected_cell.i][selected_cell.j].hint;]
 			default:
                 break;
             }
@@ -500,4 +529,29 @@ bool draw_canvas(struct Game *game, int canvas[8][8], struct SelectedCell *selec
 	}
 
 	return false;
+}
+
+// func para comparar entradas do jogador com gabarito e retornar se teve vitoria ou nao
+bool isWin (char cells[8][8])
+{
+	bool win_test = true;
+	for (int i = 0; i < 8; i++)
+	{
+		for (int j = 0; j < 8; j++)
+		{
+			if (ANSWER_SHEET.c[j][i] == cells[i][j] && win_test == true)
+			{
+				win_test = true;
+			}
+			else
+			{
+				win_test = false;
+			}
+		}
+	}
+	if (win_test)
+	{
+		return false;
+	}
+	return true;
 }
