@@ -1,13 +1,26 @@
+/**
+ * CRUZADINHAS++
+ * INSTITUTO FEDERAL DE SÃO PAULO
+ * 
+ * ALGORITMOS E LOGICA DE PROGRAMACAO 2
+ * 
+ * AUTHOR: Harper Moreira Mascarenhas
+ * DATE: 2025-06-18
+*/
+
+// INCLUIR BIBLIOTECAS NECESSARIAS
 #include <iostream>
 #include <SDL2/SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 
+// definir parametros da janela e fonte
 #define WINDOW_TITLE "Cruzadinhas++"
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 800
 #define TEXT_SIZE 23
 
+// struct para parametros do jogo
 struct Game {
     SDL_Window *window;
     SDL_Renderer *renderer;
@@ -19,20 +32,24 @@ struct Game {
 	SDL_Texture *char_image[8][8];
 };
 
+// struct para posicao da celula
 struct SelectedCell {
 	int i, j;
 	SDL_Texture *text;
 	std::string hint;
 };
 
+// declara funções do programa
 void game_cleanup(struct Game *game, int exit_status, struct SelectedCell *selected_cell);
 bool load_media(struct Game *game, struct SelectedCell *selected_cell);
 bool sdl_initialize(struct Game *game);
 bool render_text(struct Game *game, std::string text);
-void draw_canvas(struct Game *game, int canvas[8][8], struct SelectedCell *selected_cell, char cells[8][8]);
+bool render_number(struct Game *game, SDL_Rect *rect, char c, int i, int j);
+bool draw_canvas(struct Game *game, int canvas[8][8], struct SelectedCell *selected_cell, char cells[8][8]);
 
 int main() {
 
+	// matriz para receber valores inseridos pelo jogador
 	char cells[8][8] =
 	{
 		{'0', '0', '0', '0', '0', '0', '0', '0'},
@@ -44,9 +61,12 @@ int main() {
 		{'0', '0', '0', '0', '0', '0', '0', '0'},
 		{'0', '0', '0', '0', '0', '0', '0', '0'}
 	};
+
+	// declarar o texto de início
 	SelectedCell selected_cell = {
 		.hint = "Boas vindas às Cruzadinhas++!\nClique em uma célula, leia a dica e digite a palavra em seu teclado!"
 	};
+	// declarar o formato e células do tabuleiro
 	int canvas[8][8] =
 	{
 		{0, 0, 0, 0, 0, 0, 0, 0},
@@ -59,12 +79,16 @@ int main() {
 		{0, 0, 1, 1, 1, 1, 1, 1}
 	};
 
+	// declarar variáveis para receber posição do mouse
 	int mousepos_x, mousepos_y;
 
+	// declarar variavel de leitura do texto e inicializar para verdadeiro
 	bool drawing_text = true;
 
+	// declarar contador do texto, importante para fazer o texto aparecer aos poucos
 	int text_counter = 1;
 
+	// definir struct do jogo
     struct Game game = {
         .window = NULL,
         .renderer = NULL,
@@ -73,22 +97,29 @@ int main() {
 		.text_image = NULL
     };
 
+	// executar func de inicializacao e fazer testes
     if (sdl_initialize(&game)) {
         game_cleanup(&game, EXIT_FAILURE, &selected_cell);
     }
 
+	// executar func de carregamento e fazer testes
 	if (load_media(&game, &selected_cell)) {
         game_cleanup(&game, EXIT_FAILURE, &selected_cell);
     }
 
+	// GAME LOOP
     while (true) {
 
+		// CONTROLE DE INPUTS DO JOGADOR
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
+			// evento de fechar o programa
             case SDL_QUIT:
                 game_cleanup(&game, EXIT_SUCCESS, &selected_cell);
                 break;
+			// evento de clique do mouse
+			// responsável por detectar o clique e pegar a posição do mouse para definir em qual célula ele está
             case SDL_MOUSEBUTTONDOWN:
 				drawing_text = true;
 				
@@ -123,6 +154,8 @@ int main() {
 			default:
                 break;
             }
+			// Detectar input do teclado, ver cada possibilidade de tecla e definir ela na respectiva célula selecionada
+			// Deve haver uma maneira melhor de fazer isso
 			if(canvas[selected_cell.j][selected_cell.i] == 1)
 			{
 				const Uint8 *state = SDL_GetKeyboardState(NULL);
@@ -235,12 +268,16 @@ int main() {
 			//std::cout << "TECLA PRESSIONADA: " << cells[selected_cell.i][selected_cell.j] << std::endl;
 
         }
+		// LIMPAR O RENDERIZADOR (limpar frame anterior)
         SDL_RenderClear(game.renderer);
 
-		// DESENHAR O CANVAS
+		// DESENHAR O TABULEIRO
 		draw_canvas(&game, canvas, &selected_cell, cells);
 
 		// DESENHAR O TEXTO
+		// Pega o comprimento da string e compara com a variável text_counter declarada previamente
+		// text_counter é incrementado e subtraído inversamente da string original
+		// assim, o texto é revelado aos poucos
 		int stringlen = strlen(data(selected_cell.hint));
 		if(drawing_text == true)
 		{
@@ -253,16 +290,27 @@ int main() {
 		render_text(&game, selected_cell.hint.substr(0, text_counter));
 		SDL_RenderCopy(game.renderer, game.text_image, NULL, &game.text_rect);
 
+		// apresenta o novo frame
         SDL_RenderPresent(game.renderer);
 
+		// Espera 30 milésimos de segundo para repetir o loop
         SDL_Delay(30);
     }
 
+	// quando o loop acabar, limpar e fechar o jogo
     game_cleanup(&game, EXIT_SUCCESS, &selected_cell);
 
     return 0;
 }
 
+/*
+	Funcao para limpar o jogo e fechar sem deixar resíduos na memória
+	Todas as texturas utilizadas são destruídas
+
+	O Renderer e a Janela são destruidos
+	Assim como todas as bibliotecas abertas
+	TTF para textos, IMG para imagens e SDL para janelas e renderers
+*/
 void game_cleanup(struct Game *game, int exit_status, struct SelectedCell *selected_cell) {
 	SDL_DestroyTexture(game->cell);
 	SDL_DestroyTexture(selected_cell->text);
@@ -287,6 +335,11 @@ void game_cleanup(struct Game *game, int exit_status, struct SelectedCell *selec
     exit(exit_status);
 }
 
+/*
+	Funcao para inicializar o SDL
+
+	Ela inicia todos os modulos necessarios com verificacoes e output de erro
+*/
 bool sdl_initialize(struct Game *game) {
     if (SDL_Init(SDL_INIT_EVERYTHING)) {
         std::cout << "Error initializing SDL: " << SDL_GetError() << std::endl;
@@ -315,6 +368,12 @@ bool sdl_initialize(struct Game *game) {
     return false;
 }
 
+/*
+	Funcao de carregamento
+
+	Carrega cada textura necessaria para o jogo e a fonte
+	Com verificacoes e outputs de erro
+*/
 bool load_media(struct Game *game, struct SelectedCell *selected_cell)
 {
 
@@ -337,6 +396,11 @@ bool load_media(struct Game *game, struct SelectedCell *selected_cell)
 	return false;
 }
 
+/*
+	Funcao que renderiza o texto da dica
+
+	Ela recebe a string da main(), transforma em uma textura e retorna
+*/
 bool render_text(struct Game *game, std::string text)
 {
 	SDL_Surface *surface =
@@ -357,7 +421,13 @@ bool render_text(struct Game *game, std::string text)
 	return false;
 }
 
-void render_number(struct Game *game, SDL_Rect *rect, char c, int i, int j)
+/*
+	Funcao para renderizar letra
+
+	Ela recebe um char e renderiza, com verificações e saída de erro
+	Mesmos principios de render_text()
+*/
+bool render_number(struct Game *game, SDL_Rect *rect, char c, int i, int j)
 {
 	SDL_Rect trect;
 	trect.y = rect->x + 33;
@@ -371,6 +441,7 @@ void render_number(struct Game *game, SDL_Rect *rect, char c, int i, int j)
 	if (!surface)
 	{
 		std::cout << "Error creating Surface: " << SDL_GetError() << std::endl;
+		return true;
 	}
     game->text_rect.w = surface->w;
     game->text_rect.h = surface->h;
@@ -379,11 +450,20 @@ void render_number(struct Game *game, SDL_Rect *rect, char c, int i, int j)
     if (!game->text_image)
 	{
     	std::cout << "Error creating Texture: " << SDL_GetError() << std::endl;
+		return true;
 	}
 	SDL_RenderCopy(game->renderer, game->char_image[i][j], NULL, &crect);
+
+	return false;
 }
 
-void draw_canvas(struct Game *game, int canvas[8][8], struct SelectedCell *selected_cell, char cells[8][8])
+/*
+	Funcao para desenhar o tabuleiro
+
+	Ela passa pelos valores de canvas[8][8] verificando cada posição e colocando a textura de acordo
+	Também é responsável por renderizar a textura da célula selecionada e o char da célula cas ela tenha algum
+*/
+bool draw_canvas(struct Game *game, int canvas[8][8], struct SelectedCell *selected_cell, char cells[8][8])
 {
 	SDL_Rect rect;
 	rect.x = 0;
@@ -418,4 +498,6 @@ void draw_canvas(struct Game *game, int canvas[8][8], struct SelectedCell *selec
 		rect.y = selected_cell->j * 100;
 		SDL_RenderCopy(game->renderer, selected_cell->text, NULL, &rect);
 	}
+
+	return false;
 }
