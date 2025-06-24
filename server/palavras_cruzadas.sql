@@ -5,7 +5,7 @@ USE palavras_cruzadas;
 CREATE TABLE palavras_cruzadas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     palavra VARCHAR(7) NOT NULL,
-    dica VARCHAR(50) NOT NULL
+    dica VARCHAR(100) NOT NULL
 );
 
 INSERT INTO palavras_cruzadas (palavra, dica) VALUES

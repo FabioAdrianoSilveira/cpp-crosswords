@@ -21,12 +21,12 @@ const answer_struct ANSWER_SHEET =
 
     .hint = {
         { "0", "0", "0", "0", "0", "0", "0", "0" },
-        { "0", "0", "De notável valor (adj.)", "0", "0", "0", "0", "0" },
-        { "0", "Inovação insolente (sub.)", "AVISO: Selecione uma célula que não esteja em uma interseção", "Inovação insolente (sub.)", "Inovação insolente (sub.)", "Inovação insolente (sub.)", "Inovação insolente (sub.)", "Inovação insolente (sub.)" },
-        { "0", "0", "De notável valor (adj.)", "0", "0", "0", "0", "0" },
-        { "0", "0", "De notável valor (adj.)", "0", "0", "0", "0", "0" },
-        { "Entreter-se de maneira lúdica (verb. inf.)", "Entreter-se de maneira lúdica (verb. inf.)", "0", "Entreter-se de maneira lúdica (verb. inf.)", "Entreter-se de maneira lúdica (verb. inf.)", "Entreter-se de maneira lúdica (verb. inf.)", "Entreter-se de maneira lúdica (verb. inf.)", "0" },
-        { "0", "0", "De notável valor (adj.)", "0", "0", "0", "0", "0" },
-        { "0", "0", "e", "Deslocar-se para o outro lado (verb. inf.)", "Deslocar-se para o outro lado (verb. inf.)", "Deslocar-se para o outro lado (verb. inf.)", "Deslocar-se para o outro lado (verb. inf.)", "Deslocar-se para o outro lado (verb. inf.)" }
+        { "0", "0", "De notável valor", "0", "0", "0", "0", "0" },
+        { "0", "Inovação insolente", " ", "Inovação insolente", "Inovação insolente", "Inovação insolente", "Inovação insolente", "Inovação insolente" },
+        { "0", "0", "De notável valor", "0", "0", "0", "0", "0" },
+        { "0", "0", "De notável valor", "0", "0", "0", "0", "0" },
+        { "Entreter-se de maneira lúdica", "Entreter-se de maneira lúdica", " ", "Entreter-se de maneira lúdica", "Entreter-se de maneira lúdica", "Entreter-se de maneira lúdica", "Entreter-se de maneira lúdica", "0" },
+        { "0", "0", "De notável valor", "0", "0", "0", "0", "0" },
+        { "0", "0", " ", "Deslocar-se para o outro lado", "Deslocar-se para o outro lado", "Deslocar-se para o outro lado", "Deslocar-se para o outro lado", "Deslocar-se para o outro lado" }
     }
 };
