@@ -260,7 +260,7 @@ bool canInsertIntoSlot(const Board &board, const Word &word, const CrosswordSlot
         if (board.grid[r][c].filled)
         {
             // Se já está ocupada, a letra deve ser a mesma (interseção válida)
-            if (board.grid[r][c].letter != toupper(word.text[i]))
+            if (board.grid[r][c].letter != tolower(word.text[i]))
             {
                 return false; // Conflito de letras
             }
@@ -335,7 +335,7 @@ void insertIntoSlot(Board &board, Word &word, const CrosswordSlot &slot)
         {
             r += i;
         }
-        board.grid[r][c].letter = toupper(word.text[i]);
+        board.grid[r][c].letter = tolower(word.text[i]);
         board.grid[r][c].filled = true;
     }
 }
@@ -380,7 +380,7 @@ void exportBoardToFile(const Board &board, const string &filename)
         {
             if (board.grid[i][j].blocked)
             {
-                file << "#";
+                file << '0';
             }
             else if (board.grid[i][j].filled)
             {
