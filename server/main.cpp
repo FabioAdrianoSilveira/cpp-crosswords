@@ -198,7 +198,7 @@ MYSQL *ConnectionSetup(ConnectionVariables mysqlVariables)
     */
     if (!mysql_real_connect(connection, mysqlVariables.SERVER, mysqlVariables.USER, mysqlVariables.PASSWORD, mysqlVariables.DATABASE, 0, NULL, 0))
     {
-        cout << "Connection Error: " << mysql_error(connection) << endl; // Interação com terminal para apontar um erro
+        cout << "Connection Error: " << mysql_error(connection) << endl; // Interação com terminal para apontar possíveis erros
         exit(1);
     }
     return connection;
@@ -208,7 +208,7 @@ MYSQL *ConnectionSetup(ConnectionVariables mysqlVariables)
 // Argumentos: Objeto do tipo SQL e uma query válida
 MYSQL_RES *executeQuery(MYSQL *connection, const char *query)
 {
-    // Faz conexão com a MySQL C API, se estiver tudo ok com o onjeto e a query, retorna 0
+    // Faz conexão com a MySQL C API, se estiver tudo ok com o objeto e a query, retorna 0
     if (mysql_query(connection, query))
     {
         cout << "MySQL Query Error: " << mysql_error(connection) << endl; // Interação com terminal para apontar um erro
@@ -361,47 +361,65 @@ bool compareSlots(const CrosswordSlot &a, const CrosswordSlot &b)
     return a.slotDirection < b.slotDirection; // Slots horizontais têm prioridade (determinado de acordo com a tabela ASCII)
 }
 
+// A função abaixo transfere todo o conteúdo do objeto de classe Board para um arquivo
 void exportBoardToFile(const Board &board, const string &filename)
 {
+    // Declaração de filename como váriavel file da classe ofstream
     ofstream file(filename);
+    // Se a abertura do arquivo for malsucedida, o retorno será o equivalente a 0 (false) e dará trigger no if abaixo
     if (!file)
     {
         cout << "Erro ao abrir o arquivo para escrita: " << filename << endl;
         return;
     }
 
+    // Percorre o objeto e escreve seu conteúdo no arquivo de acordo com as condições apontadas dentro do laço
     for (int i = 0; i < board.lines; ++i)
     {
         for (int j = 0; j < board.columns; ++j)
         {
             if (board.grid[i][j].blocked)
+            {
                 file << "#";
+            }
             else if (board.grid[i][j].filled)
+            {
                 file << board.grid[i][j].letter;
+            }
             else
+            {
                 file << "_";
+            }
         }
         file << endl;
     }
 
+    // Encerra a conexão com o arquivo
     file.close();
 }
 
+// A função abaixo transfere todo o conteúdo de placedWords para um arquivo
 void exportTipsToFile(const map<pair<int, char>, Word> &placedWords, const string &filename)
 {
+    // Declaração de filename como váriavel file da classe ofstream
     ofstream file(filename);
+    // Se a abertura do arquivo for malsucedida, o retorno será o equivalente a 0 (false) e dará trigger no if abaixo
     if (!file)
     {
         cout << "Erro ao abrir o arquivo para escrita: " << filename << endl;
         return;
     }
 
+    // Percorre a estrutura map e escreve seu conteúdo no arquivo de acordo com as condições apontadas dentro do laço
     for (const auto &entry : placedWords)
     {
+        // Instancia um ponteiro de world como struct Word para receber informações das palavras usadas para m ontagem do tabuleiro (para mais informações, leia a explicação de map na função main())
         const Word &word = entry.second;
+        // Escreve as dicas das palavras usadas no arquivo (uma dica por linha)
         file << word.tip << endl;
     }
 
+    // Encerra a conexão com o arquivo
     file.close();
 }
 
@@ -426,9 +444,9 @@ int main()
     MYSQL_ROW row;
 
     ConnectionVariables mysqlDatabase;
-    mysqlDatabase.SERVER = "";           // Para rodar localmente, o valor de SERVER deve ser "localhost" | Para rodar em nuvem, o valor de SERVER deve ser "switchyard.proxy.rlwy.net"
-    mysqlDatabase.USER = "";                  // Para rodar localmente, o valor de USER deve ser "root" (ou seu usuário de preferência) | Para rodar em nuvem, o valor de USER deve ser "root"
-    mysqlDatabase.PASSWORD = "";  // Para rodar localmente, o valor de PASSWORD deve ser {sua_senha} | Para rodar em nuvem, o valor de PASSWORD deve ser "XnvkSWZdYVocercOkmtfeAeXcPXtzdGV"
+    mysqlDatabase.SERVER = "";   // Para rodar localmente, o valor de SERVER deve ser "localhost" | Para rodar em nuvem, o valor de SERVER deve ser "switchyard.proxy.rlwy.net"
+    mysqlDatabase.USER = "";     // Para rodar localmente, o valor de USER deve ser "root" (ou seu usuário de preferência) | Para rodar em nuvem, o valor de USER deve ser "root"
+    mysqlDatabase.PASSWORD = ""; // Para rodar localmente, o valor de PASSWORD deve ser {sua_senha} | Para rodar em nuvem, o valor de PASSWORD deve ser "XnvkSWZdYVocercOkmtfeAeXcPXtzdGV"
     mysqlDatabase.DATABASE = ""; // Para rodar localmente, o valor de DATABASE deve ser "palavras_cruzadas" | Para rodar em nuvem, o valor de DATABASE deve ser "railway"
 
     connect = ConnectionSetup(mysqlDatabase);
@@ -567,9 +585,11 @@ int main()
     cout << "\nTabuleiro Preenchido:\n";
     gameBoard.Print();
 
+    // Declaração de variável string com caminho para o arquivo que armazenará o tabuleiro
     string filename = "./files/board.txt";
+    // Chamada da função que passará o conteúdo de gameBoard para o arquivo board.txt indicado pela string filename
     exportBoardToFile(gameBoard, filename);
-    
+
     // Exibição das palavras usadas e dicas associadas a essas palavras
     cout << "\n--- Palavras e Dicas ---" << endl;
     for (const auto &slot : boardSlots)
@@ -590,7 +610,10 @@ int main()
             cout << word.tip << " (" << word.text << ")" << endl;
         }
     }
+    // Alteração do valor da váriavel anteriormente usada para indicar o arquivo board.txt
     filename = "./files/tips.txt";
+    // Chamada da função que passará o conteúdo de placedWords para o arquivo tips.txt indicado pela string filename
     exportTipsToFile(placedWords, filename);
+
     return 0;
 }
