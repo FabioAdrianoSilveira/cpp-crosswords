@@ -15,7 +15,7 @@
 #include <SDL_ttf.h>
 
 // INCLUIR ARQUIVOS PRODUZIDOS PELO SERVIDOR
-#include "jogo.h"
+#include "../../server/exports/global.h"
 
 // definir parametros da janela e fonte
 #define WINDOW_TITLE "Cruzadinhas++"
@@ -41,6 +41,9 @@ struct SelectedCell {
 	SDL_Texture *text;
 	std::string hint;
 };
+
+// struct com as informações carregadas do servidor
+gameStruct loadedGame = loadStruct("../../server/files/board.txt", "../../server/files/tips.txt");
 
 // declara funções do programa
 void game_cleanup(struct Game *game, int exit_status, struct SelectedCell *selected_cell);
@@ -163,9 +166,9 @@ int main() {
 					selected_cell.i = mousepos_x;
 					selected_cell.j = mousepos_y;
 
-					if (ANSWER_SHEET.hint[selected_cell.j][selected_cell.i] != "0" && win == false)
+					if (loadedGame.tips[selected_cell.j][selected_cell.i] != "0" && win == false)
 					{
-						selected_cell.hint = ANSWER_SHEET.hint[selected_cell.j][selected_cell.i];
+						selected_cell.hint = loadedGame.tips[selected_cell.j][selected_cell.i];
 						text_counter = 1;
 					}
 				}
@@ -539,7 +542,7 @@ bool isWin (char cells[8][8])
 	{
 		for (int j = 0; j < 8; j++)
 		{
-			if (ANSWER_SHEET.c[j][i] == cells[i][j] && win_test == true)
+			if (loadedGame.board[j][i] == cells[i][j] && win_test == true)
 			{
 				win_test = true;
 			}
