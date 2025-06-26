@@ -151,30 +151,6 @@ public:
         grid[7][0].blocked = true;
         grid[7][1].blocked = true;
     }
-
-    // Essa função é exclusiva para testes, mostra o estado da formação do quadro
-    void Print() const
-    {
-        for (int i = 0; i < lines; ++i)
-        {
-            for (int j = 0; j < columns; ++j)
-            {
-                if (grid[i][j].blocked)
-                {
-                    cout << "█ "; // Caractere para célula bloqueada
-                }
-                else if (grid[i][j].filled)
-                {
-                    cout << grid[i][j].letter << " ";
-                }
-                else
-                {
-                    cout << "_ "; // Vazio, célula liberada
-                }
-            }
-            cout << endl;
-        }
-    }
 };
 
 // --- Funções de Conexão com MySQL ---
@@ -196,9 +172,9 @@ MYSQL *ConnectionSetup(ConnectionVariables mysqlVariables)
         Tipo de conexão (NULL para TCP/IP)
         Marcação de client específico (0 para nenhum)
     */
-    if (!mysql_real_connect(connection, mysqlVariables.SERVER, mysqlVariables.USER, mysqlVariables.PASSWORD, mysqlVariables.DATABASE, 0, NULL, 0))
+    if (!mysql_real_connect(connection, mysqlVariables.SERVER, mysqlVariables.USER, mysqlVariables.PASSWORD, mysqlVariables.DATABASE, 58151, NULL, 0))
     {
-        cout << "Connection Error: " << mysql_error(connection) << endl; // Interação com terminal para apontar um erro
+        cout << "Connection Error: " << mysql_error(connection) << endl; // Interação com terminal para apontar possíveis erros
         exit(1);
     }
     return connection;
@@ -208,7 +184,7 @@ MYSQL *ConnectionSetup(ConnectionVariables mysqlVariables)
 // Argumentos: Objeto do tipo SQL e uma query válida
 MYSQL_RES *executeQuery(MYSQL *connection, const char *query)
 {
-    // Faz conexão com a MySQL C API, se estiver tudo ok com o onjeto e a query, retorna 0
+    // Faz conexão com a MySQL C API, se estiver tudo ok com o objeto e a query, retorna 0
     if (mysql_query(connection, query))
     {
         cout << "MySQL Query Error: " << mysql_error(connection) << endl; // Interação com terminal para apontar um erro
@@ -260,7 +236,7 @@ bool canInsertIntoSlot(const Board &board, const Word &word, const CrosswordSlot
         if (board.grid[r][c].filled)
         {
             // Se já está ocupada, a letra deve ser a mesma (interseção válida)
-            if (board.grid[r][c].letter != toupper(word.text[i]))
+            if (board.grid[r][c].letter != tolower(word.text[i]))
             {
                 return false; // Conflito de letras
             }
@@ -335,7 +311,7 @@ void insertIntoSlot(Board &board, Word &word, const CrosswordSlot &slot)
         {
             r += i;
         }
-        board.grid[r][c].letter = toupper(word.text[i]);
+        board.grid[r][c].letter = tolower(word.text[i]);
         board.grid[r][c].filled = true;
     }
 }
@@ -361,47 +337,65 @@ bool compareSlots(const CrosswordSlot &a, const CrosswordSlot &b)
     return a.slotDirection < b.slotDirection; // Slots horizontais têm prioridade (determinado de acordo com a tabela ASCII)
 }
 
+// A função abaixo transfere todo o conteúdo do objeto de classe Board para um arquivo
 void exportBoardToFile(const Board &board, const string &filename)
 {
+    // Declaração de filename como váriavel file da classe ofstream
     ofstream file(filename);
+    // Se a abertura do arquivo for malsucedida, o retorno será o equivalente a 0 (false) e dará trigger no if abaixo
     if (!file)
     {
         cout << "Erro ao abrir o arquivo para escrita: " << filename << endl;
         return;
     }
 
+    // Percorre o objeto e escreve seu conteúdo no arquivo de acordo com as condições apontadas dentro do laço
     for (int i = 0; i < board.lines; ++i)
     {
         for (int j = 0; j < board.columns; ++j)
         {
             if (board.grid[i][j].blocked)
-                file << "#";
+            {
+                file << '0';
+            }
             else if (board.grid[i][j].filled)
+            {
                 file << board.grid[i][j].letter;
+            }
             else
+            {
                 file << "_";
+            }
         }
         file << endl;
     }
 
+    // Encerra a conexão com o arquivo
     file.close();
 }
 
+// A função abaixo transfere todo o conteúdo de placedWords para um arquivo
 void exportTipsToFile(const map<pair<int, char>, Word> &placedWords, const string &filename)
 {
+    // Declaração de filename como váriavel file da classe ofstream
     ofstream file(filename);
+    // Se a abertura do arquivo for malsucedida, o retorno será o equivalente a 0 (false) e dará trigger no if abaixo
     if (!file)
     {
         cout << "Erro ao abrir o arquivo para escrita: " << filename << endl;
         return;
     }
 
+    // Percorre a estrutura map e escreve seu conteúdo no arquivo de acordo com as condições apontadas dentro do laço
     for (const auto &entry : placedWords)
     {
+        // Instancia um ponteiro de world como struct Word para receber informações das palavras usadas para m ontagem do tabuleiro (para mais informações, leia a explicação de map na função main())
         const Word &word = entry.second;
+        // Escreve as dicas das palavras usadas no arquivo (uma dica por linha)
         file << word.tip << endl;
     }
 
+    // Encerra a conexão com o arquivo
     file.close();
 }
 
@@ -426,17 +420,16 @@ int main()
     MYSQL_ROW row;
 
     ConnectionVariables mysqlDatabase;
-    mysqlDatabase.SERVER = "";           // Para rodar localmente, o valor de SERVER deve ser "localhost" | Para rodar em nuvem, o valor de SERVER deve ser "switchyard.proxy.rlwy.net"
-    mysqlDatabase.USER = "";                  // Para rodar localmente, o valor de USER deve ser "root" (ou seu usuário de preferência) | Para rodar em nuvem, o valor de USER deve ser "root"
-    mysqlDatabase.PASSWORD = "";  // Para rodar localmente, o valor de PASSWORD deve ser {sua_senha} | Para rodar em nuvem, o valor de PASSWORD deve ser "XnvkSWZdYVocercOkmtfeAeXcPXtzdGV"
-    mysqlDatabase.DATABASE = ""; // Para rodar localmente, o valor de DATABASE deve ser "palavras_cruzadas" | Para rodar em nuvem, o valor de DATABASE deve ser "railway"
+    mysqlDatabase.SERVER = "shinkansen.proxy.rlwy.net";   // Para rodar localmente, o valor de SERVER deve ser "localhost"
+    mysqlDatabase.USER = "root";     // Para rodar localmente, o valor de USER deve ser "root" (ou o usuário que você estiver usando no MySQL)
+    mysqlDatabase.PASSWORD = "yjtYyeBZBhklOevPBDcritsuVMfpxgDJ"; // Para rodar localmente, o valor de PASSWORD deve ser a sua senha do MySQL
+    mysqlDatabase.DATABASE = "railway"; // Para rodar localmente, o valor de DATABASE deve ser "palavras_cruzadas"
 
     connect = ConnectionSetup(mysqlDatabase);
     results = executeQuery(connect, "SELECT id, palavra, dica FROM palavras_cruzadas");
 
     // Vetor para armazenar as palavras vindas do banco de dados
     vector<Word> allWords;
-    cout << "Carregando palavras do banco de dados..." << endl; // Interação com terminal para indicar início de concexão com banco
 
     // Faz o comando de SELECT no banco de dados de ids, palavras e dicas até que o retorno seja NULL (não hajam mais registros no banco)
     while ((row = mysql_fetch_row(results)) != NULL)
@@ -449,8 +442,6 @@ int main()
 
     mysql_free_result(results); // Limpa a memória das requisições feitas a MySQL C API para evitar vazamentos e bricks no sistema
     mysql_close(connect);       // Fecha a conexão com o banco de dados
-
-    cout << "Palavras carregadas: " << allWords.size() << endl; // Interação com terminal para indicar conexão bem sucedida
 
     // Preparação das listas de palavras para randomização
     vector<Word> verticalWords;
@@ -479,8 +470,6 @@ int main()
     shuffle(verticalWords.begin(), verticalWords.end(), rng);
     shuffle(horizontalWords.begin(), horizontalWords.end(), rng);
 
-    cout << "Listas de palavras embaralhadas para randomização." << endl; // Interação com terminal para indicar que as palavras foram randomizadas
-
     // Definição do tabuleiro
     vector<CrosswordSlot> boardSlots;
     int slotId = 1; // ID internos dos slots
@@ -506,8 +495,6 @@ int main()
     boardSlots.emplace_back(slotId++, 5, 0, 'V', 1);
     boardSlots.emplace_back(slotId++, 7, 2, 'V', 1);
 
-    cout << "Slots do tabuleiro definidos: " << boardSlots.size() << endl; // Interação com terminal para indicar slots vagos para inserção de caracteres
-
     /*
         -- A função abaixo ordena os slots para preencher os mais "importantes" primeiro --
         Sort é uma função da biblioteca algorithm que ordena elementos em ordem crescente de acordo com um range fornecido
@@ -518,10 +505,6 @@ int main()
     // Inicialização do Tabuleiro
     Board gameBoard(8, 8);
     gameBoard.initializeBoard();
-
-    // Interação com terminal para indicar que o quadro foi gerado e mostrar sua estrutura
-    cout << "\nTabuleiro Vazio (com layout):\n";
-    gameBoard.Print();
 
     /*
         A estrutura abaixo (map) é uma estrutura proveniente da biblioteca map que armazena elementos formados por uma combinação de chave(um id) e um valor guardado
@@ -563,15 +546,6 @@ int main()
         }
     }
 
-    // Exibição do quadro preenchido, usado para testes e visualização via terminal apenas
-    cout << "\nTabuleiro Preenchido:\n";
-    gameBoard.Print();
-
-    string filename = "./files/board.txt";
-    exportBoardToFile(gameBoard, filename);
-    
-    // Exibição das palavras usadas e dicas associadas a essas palavras
-    cout << "\n--- Palavras e Dicas ---" << endl;
     for (const auto &slot : boardSlots)
     {
         /*
@@ -580,17 +554,17 @@ int main()
             Se nada for encontrado, o método retornará end(), um equivalemente para NULL nesse caso, se uma palavra for encontrada, um ponteiro para ela será retornado
         */
         auto it = placedWords.find({slot.internalId, slot.slotDirection});
-        if (it != placedWords.end())
-        {
-            /*
-                No contexto de objetos do tipo map, trabalhamos com "->" ao invés de "." por estarmos acessando o ponteiro de um objeto
-                No contexto de objetos do tipo map, variable->first te da acesso ao id do elemento, já variable->second te da acesso ao elemento mapeado
-            */
-            const Word &word = it->second;
-            cout << word.tip << " (" << word.text << ")" << endl;
-        }
     }
+
+    // Declaração de variável string com caminho para o arquivo que armazenará o tabuleiro
+    string filename = "./files/board.txt";
+    // Chamada da função que passará o conteúdo de gameBoard para o arquivo board.txt indicado pela string filename
+    exportBoardToFile(gameBoard, filename);
+
+    // Alteração do valor da váriavel anteriormente usada para indicar o arquivo board.txt
     filename = "./files/tips.txt";
+    // Chamada da função que passará o conteúdo de placedWords para o arquivo tips.txt indicado pela string filename
     exportTipsToFile(placedWords, filename);
+
     return 0;
 }
