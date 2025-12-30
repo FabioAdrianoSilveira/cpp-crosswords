@@ -172,7 +172,7 @@ MYSQL *ConnectionSetup(ConnectionVariables mysqlVariables)
         Tipo de conexão (NULL para TCP/IP)
         Marcação de client específico (0 para nenhum)
     */
-    if (!mysql_real_connect(connection, mysqlVariables.SERVER, mysqlVariables.USER, mysqlVariables.PASSWORD, mysqlVariables.DATABASE, 58151, NULL, 0))
+    if (!mysql_real_connect(connection, mysqlVariables.SERVER, mysqlVariables.USER, mysqlVariables.PASSWORD, mysqlVariables.DATABASE, 0, NULL, 0))
     {
         cout << "Connection Error: " << mysql_error(connection) << endl; // Interação com terminal para apontar possíveis erros
         exit(1);
@@ -420,10 +420,10 @@ int main()
     MYSQL_ROW row;
 
     ConnectionVariables mysqlDatabase;
-    mysqlDatabase.SERVER = "shinkansen.proxy.rlwy.net";   // Para rodar localmente, o valor de SERVER deve ser "localhost"
+    mysqlDatabase.SERVER = "localhost";   // Para rodar localmente, o valor de SERVER deve ser "localhost"
     mysqlDatabase.USER = "root";     // Para rodar localmente, o valor de USER deve ser "root" (ou o usuário que você estiver usando no MySQL)
-    mysqlDatabase.PASSWORD = "yjtYyeBZBhklOevPBDcritsuVMfpxgDJ"; // Para rodar localmente, o valor de PASSWORD deve ser a sua senha do MySQL
-    mysqlDatabase.DATABASE = "railway"; // Para rodar localmente, o valor de DATABASE deve ser "palavras_cruzadas"
+    mysqlDatabase.PASSWORD = ""; // Para rodar localmente, o valor de PASSWORD deve ser a sua senha do MySQL
+    mysqlDatabase.DATABASE = "palavras_cruzadas"; // Para rodar localmente, o valor de DATABASE deve ser "palavras_cruzadas"
 
     connect = ConnectionSetup(mysqlDatabase);
     results = executeQuery(connect, "SELECT id, palavra, dica FROM palavras_cruzadas");
